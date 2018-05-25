@@ -7,7 +7,7 @@
 
 #define Isize  512	//取り扱う画像のサイズX
 #define Jsize  Isize	//取り扱う画像のサイズY
-#define Bnum   7 	//ボタンの数
+#define Bnum   8 	//ボタンの数
 #define Xsize  Jsize*2+Right+5	//表示ウィンドウのサイズX
 #define Ysize  Isize+5	//表示ウインドウのサイズY
 #define Right  100	//表示ウィンドウ内の右側スペースサイズ
@@ -26,6 +26,7 @@ unsigned long Dep;
 unsigned char dat[Isize][Jsize];	//取り扱う画像データ格納用
 unsigned char dat1[Isize][Jsize];	//出力用配列
 unsigned char dat2[Isize][Jsize];	//出力用配列その2
+unsigned char dat3[Isize][Jsize];	//出力用配列その3
 unsigned char tiffdat[Isize][Jsize];	//tiff形式で保存する際の画像データ格納用
 int buff[Isize*Jsize];	
 unsigned char buffer[Isize*Jsize];
@@ -166,6 +167,24 @@ void noudo_henkan()
     view_imgW2(dat2);
 }
 
+
+void ganma_henkan()
+{
+    int i,j;
+    double r;    
+    
+	printf("ganma value = ");
+	scanf("%lf",&r);
+    for(i=0;i<Isize;i++){
+        for(j=0;j<Jsize;j++)
+        {
+                dat2[i][j]=(unsigned char)(255.0*pow(dat[i][j]/255.0,1.0/r));  //それ以外は，授業中に習った式を．
+        }
+    }
+    view_imgW2(dat2);
+}
+
+
 //windowの初期設定
 void init_window()
 {
@@ -240,6 +259,7 @@ void event_select()
 				XDrawImageString(d,Bt[2],Gc,28,21,"ViewW2",6);
 				XDrawImageString(d,Bt[3],Gc,28,21,"Change Step",4);
 				XDrawImageString(d,Bt[4],Gc,28,21,"noudo_henkan",4);
+				XDrawImageString(d,Bt[5],Gc,28,21,"ganma_henkan",4);
 				XDrawImageString(d,Bt[Bnum-2],Gc,28,21,"Save",4);
 				XDrawImageString(d,Bt[Bnum-1],Gc,28,21,"Quit",4);
 			break;
@@ -259,6 +279,9 @@ void event_select()
                 }
                 if(Ev.xany.window == Bt[4]){
                 	noudo_henkan();
+                }
+                if(Ev.xany.window == Bt[5]){
+                	ganma_henkan();
                 }
                 if(Ev.xany.window == Bt[Bnum-2]){
                 	tiff_save(tiffdat);
