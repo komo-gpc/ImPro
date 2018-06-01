@@ -7,7 +7,7 @@
 
 #define Isize  512	//取り扱う画像のサイズX
 #define Jsize  Isize	//取り扱う画像のサイズY
-#define Bnum   8 	//ボタンの数
+#define Bnum   9 	//ボタンの数
 #define Xsize  Jsize*2+Right+5	//表示ウィンドウのサイズX
 #define Ysize  Isize+5	//表示ウインドウのサイズY
 #define Right  100	//表示ウィンドウ内の右側スペースサイズ
@@ -184,6 +184,41 @@ void ganma_henkan()
     view_imgW2(dat2);
 }
 
+void histgram()
+{
+	
+	FILE *fp;
+	fp = fopen("histgram.dat","w");
+
+	
+	int i,j,c[255];
+	
+	for(i=0;i<256;i++) c[i]=0;
+	
+	for(i=0;i<Isize;i++)
+	{
+		for(j=0;j<Jsize;j++)
+		{
+			c[dat[i][j]]++;
+		}
+	}
+	
+	for(i=0;i<256;i++)
+	{
+		fprintf(fp,"%d	%d\n",i,c[i]);
+	}
+	fclose(fp);
+	
+	printf("output histgram.dat\n");
+	
+	FILE *gp;
+	
+	gp = popen("gnuplot -persist","w");
+	fprintf(gp,"plot \"histgram.dat\" w lp\n");
+	pclose(gp);
+}
+
+
 
 //windowの初期設定
 void init_window()
@@ -260,6 +295,7 @@ void event_select()
 				XDrawImageString(d,Bt[3],Gc,28,21,"Change Step",4);
 				XDrawImageString(d,Bt[4],Gc,28,21,"noudo_henkan",4);
 				XDrawImageString(d,Bt[5],Gc,28,21,"ganma_henkan",4);
+				XDrawImageString(d,Bt[6],Gc,28,21,"histgram",4);
 				XDrawImageString(d,Bt[Bnum-2],Gc,28,21,"Save",4);
 				XDrawImageString(d,Bt[Bnum-1],Gc,28,21,"Quit",4);
 			break;
@@ -282,6 +318,9 @@ void event_select()
                 }
                 if(Ev.xany.window == Bt[5]){
                 	ganma_henkan();
+                }
+                if(Ev.xany.window == Bt[6]){
+                	histgram();
                 }
                 if(Ev.xany.window == Bt[Bnum-2]){
                 	tiff_save(tiffdat);
