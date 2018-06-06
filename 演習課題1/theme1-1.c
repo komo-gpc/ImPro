@@ -25,8 +25,6 @@ unsigned long Dep;
 
 unsigned char dat[Isize][Jsize];	//取り扱う画像データ格納用
 unsigned char dat1[Isize][Jsize];	//出力用配列
-unsigned char dat2[Isize][Jsize];	//出力用配列その2
-unsigned char dat3[Isize][Jsize];	//出力用配列その3
 unsigned char tiffdat[Isize][Jsize];	//tiff形式で保存する際の画像データ格納用
 int buff[Isize*Jsize];	
 unsigned char buffer[Isize*Jsize];
@@ -34,7 +32,7 @@ unsigned char buffer[Isize*Jsize];
 //表示画像をTIFF形式で保存する関数
 void tiff_save(unsigned char img[Isize][Jsize]){
 	TIFF *image;
-	
+
 	int i,j,k;
 	char save_fname[256];
 
@@ -157,14 +155,14 @@ void noudo_henkan()
     }
     for(i=0;i<Isize;i++){
         for(j=0;j<Jsize;j++){
-            if(dat[i][j]<min) dat2[i][j]=0;          //minより小さいものは0とする．
-            else if(dat[i][j]>max) dat2[i][j]=255;    //maxより大きいものは255とする．
+            if(dat[i][j]<min) dat1[i][j]=0;          //minより小さいものは0とする．
+            else if(dat[i][j]>max) dat1[i][j]=255;    //maxより大きいものは255とする．
             else{
-                dat2[i][j]=(unsigned char)(255/(max-min)*(dat[i][j]-min));  //それ以外は，授業中に習った式を．
+                dat1[i][j]=(unsigned char)(255/(max-min)*(dat[i][j]-min));  //それ以外は，授業中に習った式を．
             }
         }
     }
-    view_imgW2(dat2);
+    view_imgW2(dat1);
 }
 
 
@@ -178,10 +176,10 @@ void ganma_henkan()
     for(i=0;i<Isize;i++){
         for(j=0;j<Jsize;j++)
         {
-                dat2[i][j]=(unsigned char)(255.0*pow(dat[i][j]/255.0,1.0/r));  //それ以外は，授業中に習った式を．
+                dat1[i][j]=(unsigned char)(255.0*pow(dat[i][j]/255.0,1.0/r));  //それ以外は，授業中に習った式を．
         }
     }
-    view_imgW2(dat2);
+    view_imgW2(dat1);
 }
 
 void histgram()
@@ -229,7 +227,7 @@ void init_window()
 	//d=XOpenDisplay(NULL);	
   	// Xサーバとの接続
 	if( (d = XOpenDisplay( NULL )) == NULL ) {
-		fprintf( stderr, "Ｘサーバに接続できません\n" );
+		fprintf( stderr, "Xサーバに接続できません\n" );
 		exit(1);
 	}
 	
