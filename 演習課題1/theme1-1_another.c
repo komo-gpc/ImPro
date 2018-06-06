@@ -8,10 +8,13 @@ const int Jsize = 512;
 
 
 void mode();
-void read_file(unsigned char *);
-void tiff_save(unsigned char *);
-void tiff_out(unsigned char *);
-voif change_step(unsigned char *,unsigned char *);
+void read_file(unsigned char*);
+void tiff_save(unsigned char*);
+void tiff_out(unsigned char*);
+void change_step(unsigned char*,unsigned char*);
+void noudo_henkan(unsigned char*,unsigned char*);
+void ganma_henkan(unsigned char*,unsigned char*);
+void histgram(unsigned char*);
 
 int main()	//メイン
 {
@@ -31,26 +34,26 @@ void mode()	//モード選択
 		printf("モードを選択してください\n");
 		printf("1.画像読み込み\n諧調変化\n濃度変換\nガンマ変換\nヒストグラム\nセーブ\n終了\n");
 		printf("モードNo. = ");
-		scanf("%d",i);
+		scanf("%d",&i);
 		switch(i)
 		{
 			case 1:
-				read_file(&dat_md);
+				read_file(dat_md);
 				break;
 			case 2:
-				change_step(&dat_md,&dat_temp);
+				change_step(dat_md,dat_temp);
 				break;
 			case 3:
-				noudo_henkan(&dat_md);
+				noudo_henkan(dat_md);
 				break;
 			case 4:
-				ganma_henkan(&dat_md);
+				ganma_henkan(dat_md);
 				break;
 			case 5:
-				histgram(&dat_md);
+				histgram(dat_md);
 				break;
 			case 6:
-				tiff_save(&dat_temp);
+				tiff_save(dat_temp);
 				break;
 			case 7:
 				break;
@@ -68,11 +71,13 @@ void read_file(unsigned char *dat_rf)	//画像読み込み
 	char *name;
 
 	printf("File Name :");
-	if(scanf("%ms",&name) == NULL)
+	scanf("%ms",&name);
+	if(name == NULL)
 	{
-		printf("Read Error\n");
+		printf("Error\n");
 		exit(1);
 	}
+
 	
 	if((fi=fopen(name,"r"))==NULL)
 	{
@@ -80,14 +85,14 @@ void read_file(unsigned char *dat_rf)	//画像読み込み
 		exit(1);
 	}
 	
-	fread(dat,1,Isize*Jsize,fi);
+	fread(dat_rf,1,Isize*Jsize,fi);
 	
 	free(name);
 	fclose(fi);
 }
 
 
-void tiff_save(unsigned char *dat_temp_ts)
+void tiff_save(unsigned char dat_temp_ts[Isize][Jsize])
 {
 	TIFF *image;
 	unsigned char buffer[Isize*Jsize];
@@ -135,7 +140,7 @@ void tiff_save(unsigned char *dat_temp_ts)
 
 	// Close the file
 	TIFFClose(image);
-	close(fname);
+	free(save_fname);
 }
 
 
@@ -150,7 +155,7 @@ void tiff_out(unsigned char *dat_o)
 	{
 		for(int j=0;j<Jsize;j++)
 		{
-			buffer[k]=dat_temp_ts[i][j];
+			buffer[k]=dat_o[i][j];
 			k++;
 		}
 	}
@@ -183,19 +188,12 @@ void tiff_out(unsigned char *dat_o)
 
 	// Close the file
 	TIFFClose(image);
-	close(fname);
 	
 	printf("Please Cheak Output File And Pless Enterkey");
 	//system("eog output.tiff");
 	//無限ループに陥るかもなので修正予定?
-	for (;;)
-	{
-		int key = WaitKey();
-		if (key == KEY_INPUT_RETURN)
-		{
-			break;
-		}
-	}
+	while(getchar() != '\n');
+
 	//system("rm -f output.tiff");
 }
 
@@ -215,5 +213,5 @@ void change_step(unsigned char *dat_cs,unsigned char *dat_cs_temp)
         }
     }
 	
-	tiff_out(&dat_cs_temp);	//ややこしい!
+	tiff_out(dat_cs_temp);	//ややこしい!
 }
