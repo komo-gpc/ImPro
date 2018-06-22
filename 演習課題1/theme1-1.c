@@ -7,7 +7,7 @@
 
 #define Isize  512	//取り扱う画像のサイズX
 #define Jsize  Isize	//取り扱う画像のサイズY
-#define Bnum   9 	//ボタンの数
+#define Bnum   11	//ボタンの数
 #define Xsize  Jsize*2+Right+5	//表示ウィンドウのサイズX
 #define Ysize  Isize+5	//表示ウインドウのサイズY
 #define Right  100	//表示ウィンドウ内の右側スペースサイズ
@@ -25,16 +25,20 @@ unsigned long Dep;
 
 unsigned char dat[Isize][Jsize];	//取り扱う画像データ格納用
 unsigned char dat1[Isize][Jsize];	//出力用配列
-unsigned char dat2[Isize][Jsize];	//出力用配列その2
-unsigned char dat3[Isize][Jsize];	//出力用配列その3
+unsigned char dat2[Isize][Jsize];
+short int fdat[Isize][Jsize];
 unsigned char tiffdat[Isize][Jsize];	//tiff形式で保存する際の画像データ格納用
 int buff[Isize*Jsize];	
 unsigned char buffer[Isize*Jsize];
 
+int f[3][3] =	{{0,-1,0},
+				{-1,5,-1},
+				{0,-1,0}};
+
 //表示画像をTIFF形式で保存する関数
 void tiff_save(unsigned char img[Isize][Jsize]){
 	TIFF *image;
-	
+
 	int i,j,k;
 	char save_fname[256];
 
@@ -157,14 +161,14 @@ void noudo_henkan()
     }
     for(i=0;i<Isize;i++){
         for(j=0;j<Jsize;j++){
-            if(dat[i][j]<min) dat2[i][j]=0;          //minより小さいものは0とする．
-            else if(dat[i][j]>max) dat2[i][j]=255;    //maxより大きいものは255とする．
+            if(dat[i][j]<min) dat1[i][j]=0;          //minより小さいものは0とする．
+            else if(dat[i][j]>max) dat1[i][j]=255;    //maxより大きいものは255とする．
             else{
-                dat2[i][j]=(unsigned char)(255/(max-min)*(dat[i][j]-min));  //それ以外は，授業中に習った式を．
+                dat1[i][j]=(unsigned char)(255/(max-min)*(dat[i][j]-min));  //それ以外は，授業中に習った式を．
             }
         }
     }
-    view_imgW2(dat2);
+    view_imgW2(dat1);
 }
 
 
@@ -178,10 +182,10 @@ void ganma_henkan()
     for(i=0;i<Isize;i++){
         for(j=0;j<Jsize;j++)
         {
-                dat2[i][j]=(unsigned char)(255.0*pow(dat[i][j]/255.0,1.0/r));  //それ以外は，授業中に習った式を．
+                dat1[i][j]=(unsigned char)(255.0*pow(dat[i][j]/255.0,1.0/r));  //それ以外は，授業中に習った式を．
         }
     }
-    view_imgW2(dat2);
+    view_imgW2(dat1);
 }
 
 void histgram()
@@ -219,7 +223,87 @@ void histgram()
 	pclose(gp);
 }
 
+void filter_operation()
+{
+    int i,j,max,min,k,l;
 
+    //初期化
+    for(i=0;i<Isize;i++){
+        for(j=0;j<Jsize;j++){
+            fdat[i][j]=0;
+        }
+    }
+
+	for(i=1;i<Isize-1;i++)
+	{
+		for(j=1;j<Jsize-1;j++)
+		{
+			for(k=0;k<3;k++)
+			{
+				for(l=0;l<3;l++)
+				{
+					fdat[i][j] += dat[i-1+k][j-1+l]*f[k][l];
+				}
+			}
+		}
+	}
+
+//short int型のfdat から最大値と最小値を求め，256階調のデータdat3を作成する．
+    max=min=fdat[1][1];
+    for(i=1;i<Isize-1;i++){
+        for(j=1;j<Jsize-1;j++){
+            if(fdat[i][j]>max) max=fdat[i][j];
+            if(fdat[i][j]<min) min=fdat[i][j];
+        }
+    }
+    for(i=0;i<Isize;i++){
+        for(j=0;j<Jsize;j++){
+            if(fdat[i][j]<min) dat2[i][j]=0;
+            else if(fdat[i][j]>max) dat2[i][j]=255;
+            else{
+                dat2[i][j]=(unsigned char)
+                   ((fdat[i][j]-min)*255./(float)(max-min));
+            }
+        }
+    }
+    view_imgW2(dat2);
+}
+
+void median_filter()
+{
+    int i,j;
+    unsigned char sort();
+    for(i=1;i<Isize-1;i++){
+        for(j=1;j<Jsize-1;j++){
+            dat2[i][j]=sort(i,j);
+        }
+    }
+    view_imgW2(dat2);
+}
+
+unsigned char sort(int a, int b)
+{
+    int i,j,k;
+    unsigned char c[9];
+
+    k=0;
+    for(i=a-1;i<=a+1;i++){
+        for(j=b-1;j<=b+1;j++){
+            c[k]=dat[i][j];
+            k++;
+        }
+    }
+    for(j=0;j<8;j++){
+        for(i=j+1;i<9;i++){
+            if(c[i] > c[j]){
+				k=c[j];
+				c[j]=c[i];
+				c[i]=k;
+            }
+        }
+    }
+    return c[4];      //中間値を返す．
+}
 
 //windowの初期設定
 void init_window()
@@ -230,7 +314,7 @@ void init_window()
 	//d=XOpenDisplay(NULL);	
   	// Xサーバとの接続
 	if( (d = XOpenDisplay( NULL )) == NULL ) {
-		fprintf( stderr, "Ｘサーバに接続できません\n" );
+		fprintf( stderr, "Xサーバに接続できません\n" );
 		exit(1);
 	}
 	
@@ -297,6 +381,8 @@ void event_select()
 				XDrawImageString(d,Bt[4],Gc,28,21,"noudo_henkan",4);
 				XDrawImageString(d,Bt[5],Gc,28,21,"ganma_henkan",4);
 				XDrawImageString(d,Bt[6],Gc,28,21,"histgram",4);
+				XDrawImageString(d,Bt[7],Gc,28,21,"filter",4);
+				XDrawImageString(d,Bt[8],Gc,28,21,"median",4);
 				XDrawImageString(d,Bt[Bnum-2],Gc,28,21,"Save",4);
 				XDrawImageString(d,Bt[Bnum-1],Gc,28,21,"Quit",4);
 			break;
@@ -322,6 +408,12 @@ void event_select()
                 }
                 if(Ev.xany.window == Bt[6]){
                 	histgram();
+                }
+                if(Ev.xany.window == Bt[7]){
+                	filter_operation();
+                }
+                if(Ev.xany.window == Bt[8]){
+                	median_filter();
                 }
                 if(Ev.xany.window == Bt[Bnum-2]){
                 	tiff_save(tiffdat);
