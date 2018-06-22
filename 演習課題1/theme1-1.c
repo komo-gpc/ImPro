@@ -214,6 +214,7 @@ void histgram()
 	FILE *gp;
 	
 	gp = popen("gnuplot -persist","w");
+	fprintf(gp,"set xr[0:255]\n");
 	fprintf(gp,"plot \"histgram.dat\" w lp\n");
 	pclose(gp);
 }
